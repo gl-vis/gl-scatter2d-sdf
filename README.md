@@ -1,6 +1,6 @@
-gl-scatter2d-fancy
-==================
-This code is similar to gl-scatter2d, but supports a larger range of styling features like custom marker glyphs, per marker colors, etc.  As a result, it is not as performant but provides more customization.
+# gl-scatter2d-sdf
+
+This code is similar to [gl-scatter2d-fancy](https://github.com/gl-vis/gl-scatter2d-fancy), but utilizes [SDF](https://www.mapbox.com/blog/text-signed-distance-fields/) technique to render symbols.
 
 ```js
 const createPlot = require('gl-plot2d')

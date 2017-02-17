@@ -1,14 +1,14 @@
 {
-  "name": "gl-scatter2d-fancy",
+  "name": "gl-scatter2d-sdf",
   "version": "1.2.1",
   "description": "Fancy and slow scatter plots",
-  "main": "scatter-fancy.js",
+  "main": "scatter.js",
   "scripts": {
     "test": "tape test/*.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gl-vis/gl-scatter2d-fancy.git"
+    "url": "git+https://github.com/gl-vis/gl-scatter2d-sdf.git"
   },
   "keywords": [
     "scatter",
@@ -21,14 +21,14 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/gl-vis/gl-scatter2d-fancy/issues"
+    "url": "https://github.com/gl-vis/gl-scatter2d-sdf/issues"
   },
   "browserify": {
     "transform": [
       "glslify"
     ]
   },
-  "homepage": "https://github.com/gl-vis/gl-scatter2d-fancy#readme",
+  "homepage": "https://github.com/gl-vis/gl-scatter2d-sdf#readme",
   "dependencies": {
     "binary-search-bounds": "^2.0.3",
     "clamp": "^1.0.1",
