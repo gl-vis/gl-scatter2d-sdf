@@ -50,7 +50,7 @@ function GLScatterFancy(
   this.charStep       = 400
 
   //due to font alignmens some glyphs are off a bit
-  this.charOffset     = .03
+  this.charOffset     = .032
 
   //snapping loses points sorting, so disable snapping on small number of points
   this.snapThreshold  = 1e4
@@ -301,7 +301,7 @@ proto.update = function(options) {
   for (var i = 0, l = sizes.length; i < l; ++i) {
     if (sizes[i] > maxSize) maxSize = sizes[i]
   }
-  this.charStep = clamp(Math.ceil(maxSize*6), 128, 512)
+  this.charStep = clamp(Math.ceil(maxSize*4), 128, 768)
 
   var chars = Object.keys(glyphChars)
   var step = this.charStep
