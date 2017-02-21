@@ -22,10 +22,10 @@ void main() {
 	if (dist < 1e-2)
 		discard;
 
-	float dif = 6. * pixelRatio * borderWidth / pointSize;
-	float borderLevel = .746 - dif * .6;
-	float charLevel = .746 + dif * .4;
-	float gamma = .0045 * charsStep / pointSize;
+	float dif = 5. * pixelRatio * borderWidth / pointSize;
+	float borderLevel = .748 - dif * .5;
+	float charLevel = .748 + dif * .5;
+	float gamma = .005 * charsStep / pointSize;
 
 	float borderAmt = smoothstep(borderLevel - gamma, borderLevel + gamma, dist);
 	float charAmt = smoothstep(charLevel - gamma, charLevel + gamma, dist);
