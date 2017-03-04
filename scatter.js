@@ -126,6 +126,7 @@ var proto = GLScatterFancy.prototype
 
     var gl = plot.gl
     var shader = pick ? this.pickShader : this.shader
+    var blend = gl.isEnabled(gl.BLEND)
 
     shader.bind()
 
@@ -144,7 +145,7 @@ var proto = GLScatterFancy.prototype
     } else {
       gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.blendColor(0,0,0,1);
-      gl.enable(gl.BLEND)
+      if (!blend) gl.enable(gl.BLEND)
 
       this.colorBuffer.bind()
       shader.attributes.color.pointer(gl.UNSIGNED_BYTE, false)
@@ -200,7 +201,7 @@ var proto = GLScatterFancy.prototype
 
     if (pick) return offset + pointCount
     else {
-      gl.disable(gl.BLEND)
+      if (!blend) gl.disable(gl.BLEND)
     }
   }
 })()
