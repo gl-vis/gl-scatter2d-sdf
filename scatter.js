@@ -202,6 +202,9 @@ var proto = GLScatterFancy.prototype
     if (pick) return offset + pointCount
     else {
       if (!blend) gl.disable(gl.BLEND)
+      else {
+        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+      }
     }
   }
 })()
