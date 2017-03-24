@@ -305,6 +305,7 @@ proto.update = function(options) {
   for (var i = 0, l = sizes.length; i < l; ++i) {
     if (sizes[i] > maxSize) maxSize = sizes[i]
   }
+  var oldStep = this.charStep
   this.charStep = clamp(Math.ceil(maxSize*4), 128, 768)
 
   var chars = Object.keys(glyphChars)
@@ -320,7 +321,7 @@ proto.update = function(options) {
   }
 
   //do not overupdate atlas
-  if (!this.chars || (this.chars+'' !== chars+'')) {
+  if (!this.chars || (this.chars+'' !== chars+'') || this.charStep != oldStep) {
     this.charCanvas = atlas({
       canvas: this.charCanvas,
       family: 'sans-serif',
