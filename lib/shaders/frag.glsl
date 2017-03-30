@@ -17,15 +17,22 @@ void main() {
 	pointUV.y += charOffset;
 	vec2 texCoord = ((charId + pointUV) * charsStep) / charsShape;
 	float dist = texture2D(chars, texCoord).r;
+	float gamma = .005 * charsStep / pointSize;
 
 	//max-distance alpha
 	if (dist < 1e-2)
 		discard;
 
+    //null-border case
+	if (borderWidth == 0. || borderColor.a == 0.) {
+		float charAmt = smoothstep(.748 - gamma, .748 + gamma, dist);
+		gl_FragColor = vec4(charColor.rgb, charAmt);
+		return;
+	}
+
 	float dif = 5. * pixelRatio * borderWidth / pointSize;
 	float borderLevel = .748 - dif * .5;
 	float charLevel = .748 + dif * .5;
-	float gamma = .005 * charsStep / pointSize;
 
 	float borderAmt = smoothstep(borderLevel - gamma, borderLevel + gamma, dist);
 	float charAmt = smoothstep(charLevel - gamma, charLevel + gamma, dist);
