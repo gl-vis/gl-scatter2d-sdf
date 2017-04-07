@@ -26,7 +26,7 @@ void main() {
     //null-border case
 	if (borderWidth == 0. || borderColor.a == 0.) {
 		float charAmt = smoothstep(.748 - gamma, .748 + gamma, dist);
-		gl_FragColor = vec4(charColor.rgb, charAmt);
+		gl_FragColor = vec4(charColor.rgb, charAmt*charColor.a);
 		return;
 	}
 
