@@ -21,7 +21,7 @@ void main() {
 	if (dist < 1e-2)
 		discard;
 
-	float gamma = .0035 * charsStep / pointSize;
+	float gamma = .0045 * charsStep / pointSize;
 
     //null-border case
 	if (borderWidth == 0. || borderColor.a == 0.) {
