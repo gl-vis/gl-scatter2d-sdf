@@ -14,14 +14,14 @@ varying float borderWidth;
 void main() {
 	vec2 pointUV = (pointCoord - gl_FragCoord.xy + pointSize * .5) / pointSize;
 	pointUV.x = 1. - pointUV.x;
-	pointUV.y += charOffset;
 	vec2 texCoord = ((charId + pointUV) * charsStep) / charsShape;
 	float dist = texture2D(chars, texCoord).r;
-	float gamma = .005 * charsStep / pointSize;
 
 	//max-distance alpha
 	if (dist < 1e-2)
 		discard;
+
+	float gamma = .0035 * charsStep / pointSize;
 
     //null-border case
 	if (borderWidth == 0. || borderColor.a == 0.) {

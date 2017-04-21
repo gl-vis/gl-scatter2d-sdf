@@ -49,9 +49,6 @@ function GLScatterFancy(
   this.charTexture    = createTexture(this.plot.gl, this.charCanvas)
   this.charStep       = 400
 
-  //due to font alignmens some glyphs are off a bit
-  this.charOffset     = .032
-
   //snapping loses points sorting, so disable snapping on small number of points
   this.snapThreshold  = 1e4
 
@@ -157,7 +154,6 @@ var proto = GLScatterFancy.prototype
       shader.uniforms.charsShape = [this.charCanvas.width, this.charCanvas.height]
       shader.uniforms.charsStep = this.charStep
       shader.uniforms.palette = this.paletteTexture.bind(1)
-      shader.uniforms.charOffset = this.charOffset
     }
 
     this.sizeBuffer.bind()
@@ -236,8 +232,6 @@ proto.update = function(options) {
   var borderWidths  = options.borderWidths || []
   var borderColors  = options.borderColors || []
   var gl = this.plot.gl
-
-  if (options.charOffset != null) this.charOffset = options.charOffset
 
   this.points = positions
 
@@ -328,7 +322,8 @@ proto.update = function(options) {
       size: charSize,
       shape: [atlasW, atlasH],
       step: [step, step],
-      chars: chars
+      chars: chars,
+      align: true
     })
     this.chars = chars
   }
