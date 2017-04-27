@@ -33,7 +33,7 @@
     "binary-search-bounds": "^2.0.3",
     "clamp": "^1.0.1",
     "color-id": "^1.0.0",
-    "font-atlas-sdf": "^1.0.0",
+    "font-atlas-sdf": "^1.2.0",
     "gl-buffer": "^2.1.2",
     "gl-shader": "^4.2.1",
     "gl-texture2d": "^2.1.0",
