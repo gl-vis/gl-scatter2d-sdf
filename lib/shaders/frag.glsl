@@ -12,33 +12,32 @@ varying float pointSize;
 varying float borderWidth;
 
 void main() {
-	vec2 pointUV = (pointCoord - gl_FragCoord.xy + pointSize * .5) / pointSize;
-	pointUV.x = 1. - pointUV.x;
-	vec2 texCoord = ((charId + pointUV) * charsStep) / charsShape;
-	float dist = texture2D(chars, texCoord).r;
+    vec2 pointUV = (pointCoord - gl_FragCoord.xy + pointSize * .5) / pointSize;
+    pointUV.x = 1. - pointUV.x;
+    vec2 texCoord = ((charId + pointUV) * charsStep) / charsShape;
+    float dist = texture2D(chars, texCoord).r;
 
-	//max-distance alpha
-	if (dist < 1e-2)
-		discard;
+    //max-distance alpha
+    if (dist < 1e-2)
+        discard;
 
-	float gamma = .0045 * charsStep / pointSize;
+    float gamma = .0045 * charsStep / pointSize;
 
     //null-border case
-	if (borderWidth == 0. || borderColor.a == 0.) {
-		float charAmt = smoothstep(.748 - gamma, .748 + gamma, dist);
-		gl_FragColor = vec4(charColor.rgb, charAmt*charColor.a);
-		return;
-	}
+    if (borderWidth == 0. || borderColor.a == 0.) {
+        float charAmt = smoothstep(.748 - gamma, .748 + gamma, dist);
+        gl_FragColor = vec4(charColor.rgb, charAmt*charColor.a);
+    } else {
+        float dif = 5. * pixelRatio * borderWidth / pointSize;
+        float borderLevel = .748 - dif * .5;
+        float charLevel = .748 + dif * .5;
 
-	float dif = 5. * pixelRatio * borderWidth / pointSize;
-	float borderLevel = .748 - dif * .5;
-	float charLevel = .748 + dif * .5;
+        float borderAmt = smoothstep(borderLevel - gamma, borderLevel + gamma, dist);
+        float charAmt = smoothstep(charLevel - gamma, charLevel + gamma, dist);
 
-	float borderAmt = smoothstep(borderLevel - gamma, borderLevel + gamma, dist);
-	float charAmt = smoothstep(charLevel - gamma, charLevel + gamma, dist);
+        vec4 color = borderColor;
+        color.a *= borderAmt;
 
-	vec4 color = borderColor;
-	color.a *= borderAmt;
-
-	gl_FragColor = mix(color, charColor, charAmt);
+        gl_FragColor = mix(color, charColor, charAmt);
+    }
 }
