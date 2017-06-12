@@ -32,7 +32,7 @@ function GLScatterFancy(
   this.sizeBuffer     = sizeBuffer
   this.colorBuffer    = colorBuffer
   this.idBuffer       = idBuffer
-  this.charBuffer       = charBuffer
+  this.charBuffer      = charBuffer
 
   this.pointCount     = 0
   this.pickOffset     = 0
@@ -59,152 +59,151 @@ function GLScatterFancy(
 
 var proto = GLScatterFancy.prototype
 
-;(function() {
-  var SCALE_HI = new Float32Array([0, 0])
-  var SCALE_LO = new Float32Array([0, 0])
-  var TRANSLATE_HI = new Float32Array([0, 0])
-  var TRANSLATE_LO = new Float32Array([0, 0])
+var SCALE_HI = new Float32Array([0, 0])
+var SCALE_LO = new Float32Array([0, 0])
+var TRANSLATE_HI = new Float32Array([0, 0])
+var TRANSLATE_LO = new Float32Array([0, 0])
 
-  var PIXEL_SCALE = [0, 0]
+var PIXEL_SCALE = [0, 0]
 
-  var pixelSize, xStart, xEnd
+var pixelSize, xStart, xEnd
 
 
-  function calcScales() {
-    var plot       = this.plot
+function calcScales() {
+  var plot       = this.plot
 
-    var viewBox    = plot.viewBox
-    var dataBox    = plot.dataBox
-    var pixelRatio = plot.pixelRatio
+  var viewBox    = plot.viewBox
+  var dataBox    = plot.dataBox
+  var pixelRatio = plot.pixelRatio
 
-    var dataX  = dataBox[2] - dataBox[0]
-    var dataY  = dataBox[3] - dataBox[1]
+  var dataX  = dataBox[2] - dataBox[0]
+  var dataY  = dataBox[3] - dataBox[1]
 
-    var scaleX = 2 / dataX
-    var scaleY = 2 / dataY
-    var translateX = (- dataBox[0] - 0.5 * dataX)
-    var translateY = (- dataBox[1] - 0.5 * dataY)
+  var scaleX = 2 / dataX
+  var scaleY = 2 / dataY
+  var translateX = (- dataBox[0] - 0.5 * dataX)
+  var translateY = (- dataBox[1] - 0.5 * dataY)
 
-    SCALE_HI[0] = scaleX
-    SCALE_LO[0] = scaleX - SCALE_HI[0]
-    SCALE_HI[1] = scaleY
-    SCALE_LO[1] = scaleY - SCALE_HI[1]
+  SCALE_HI[0] = scaleX
+  SCALE_LO[0] = scaleX - SCALE_HI[0]
+  SCALE_HI[1] = scaleY
+  SCALE_LO[1] = scaleY - SCALE_HI[1]
 
-    TRANSLATE_HI[0] = translateX
-    TRANSLATE_LO[0] = translateX - TRANSLATE_HI[0]
-    TRANSLATE_HI[1] = translateY
-    TRANSLATE_LO[1] = translateY - TRANSLATE_HI[1]
+  TRANSLATE_HI[0] = translateX
+  TRANSLATE_LO[0] = translateX - TRANSLATE_HI[0]
+  TRANSLATE_HI[1] = translateY
+  TRANSLATE_LO[1] = translateY - TRANSLATE_HI[1]
 
-    var screenX = viewBox[2] - viewBox[0]
-    var screenY = viewBox[3] - viewBox[1]
+  var screenX = viewBox[2] - viewBox[0]
+  var screenY = viewBox[3] - viewBox[1]
 
-    pixelSize   = Math.min(dataX / screenX, dataY / screenY)
+  pixelSize   = Math.min(dataX / screenX, dataY / screenY)
 
-    //FIXME: why twice?
-    PIXEL_SCALE[0] = 2 * pixelRatio / screenX
-    PIXEL_SCALE[1] = 2 * pixelRatio / screenY
+  //FIXME: why twice?
+  PIXEL_SCALE[0] = 2 * pixelRatio / screenX
+  PIXEL_SCALE[1] = 2 * pixelRatio / screenY
 
-    xStart = dataBox[0]
-    xEnd = dataBox[2]
+  xStart = dataBox[0]
+  xEnd = dataBox[2]
+}
+
+var PICK_OFFSET = [0, 0, 0, 0]
+
+proto.drawPick = function(offset) {
+  var pick = offset !== undefined
+  var plot = this.plot
+  var pointCount = this.pointCount
+  var snap = pointCount > this.snapThreshold
+
+  if(!pointCount) {
+    return offset
   }
 
-  var PICK_OFFSET = [0, 0, 0, 0]
+  calcScales.call(this)
 
-  proto.drawPick = function(offset) {
-    var pick = offset !== undefined
-    var plot = this.plot
-    var pointCount = this.pointCount
-    var snap = pointCount > this.snapThreshold
+  var gl = plot.gl
+  var shader = pick ? this.pickShader : this.shader
+  var blend = gl.isEnabled(gl.BLEND)
 
-    if(!pointCount) {
-      return offset
+  shader.bind()
+
+  if(pick) {
+    this.pickOffset = offset
+
+    for (var i = 0; i < 4; ++i) {
+      PICK_OFFSET[i] = (offset >> (i * 8)) & 0xff
     }
 
-    calcScales.call(this)
+    shader.uniforms.pickOffset = PICK_OFFSET
 
-    var gl = plot.gl
-    var shader = pick ? this.pickShader : this.shader
-    var blend = gl.isEnabled(gl.BLEND)
+    this.idBuffer.bind()
+    shader.attributes.id.pointer(gl.UNSIGNED_BYTE, false)
 
-    shader.bind()
+  } else {
+    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.blendColor(0,0,0,1);
+    if (!blend) gl.enable(gl.BLEND)
 
-    if(pick) {
-      this.pickOffset = offset
+    this.colorBuffer.bind()
+    shader.attributes.color.pointer(gl.UNSIGNED_BYTE, false)
 
-      for (var i = 0; i < 4; ++i) {
-        PICK_OFFSET[i] = (offset >> (i * 8)) & 0xff
-      }
+    this.charBuffer.bind()
+    shader.attributes.char.pointer(gl.UNSIGNED_BYTE, false)
 
-      shader.uniforms.pickOffset = PICK_OFFSET
+    shader.uniforms.chars = this.charTexture.bind(0)
+    shader.uniforms.charsShape = [this.charCanvas.width, this.charCanvas.height]
+    shader.uniforms.charsStep = this.charStep
+    shader.uniforms.palette = this.paletteTexture.bind(1)
+  }
 
-      this.idBuffer.bind()
-      shader.attributes.id.pointer(gl.UNSIGNED_BYTE, false)
+  this.sizeBuffer.bind()
+  shader.attributes.size.pointer(gl.FLOAT, false, 8, 0)
+  if (!pick) shader.attributes.border.pointer(gl.FLOAT, false, 8, 4)
 
-    } else {
-      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-      gl.blendColor(0,0,0,1);
-      if (!blend) gl.enable(gl.BLEND)
+  this.positionBuffer.bind()
+  shader.attributes.positionHi.pointer(gl.FLOAT, false, 16, 0)
+  shader.attributes.positionLo.pointer(gl.FLOAT, false, 16, 8)
 
-      this.colorBuffer.bind()
-      shader.attributes.color.pointer(gl.UNSIGNED_BYTE, false)
+  shader.uniforms.pixelRatio  = plot.pixelRatio
+  shader.uniforms.scaleHi     = SCALE_HI
+  shader.uniforms.scaleLo     = SCALE_LO
+  shader.uniforms.translateHi = TRANSLATE_HI
+  shader.uniforms.translateLo = TRANSLATE_LO
+  shader.uniforms.viewBox = plot.viewBox
 
-      this.charBuffer.bind()
-      shader.attributes.char.pointer(gl.UNSIGNED_BYTE, false)
+  var scales = this.scales
 
-      shader.uniforms.chars = this.charTexture.bind(0)
-      shader.uniforms.charsShape = [this.charCanvas.width, this.charCanvas.height]
-      shader.uniforms.charsStep = this.charStep
-      shader.uniforms.palette = this.paletteTexture.bind(1)
-    }
+  if (snap) {
+    for (var scaleNum = scales.length - 1; scaleNum >= 0; scaleNum--) {
+        var lod = scales[scaleNum]
+        if(lod.pixelSize && (lod.pixelSize < pixelSize * 1.25) && scaleNum > 1) {
+          continue
+        }
 
-    this.sizeBuffer.bind()
-    shader.attributes.size.pointer(gl.FLOAT, false, 8, 0)
-    if (!pick) shader.attributes.border.pointer(gl.FLOAT, false, 8, 4)
+        var intervalStart = lod.offset
+        var intervalEnd   = lod.count + intervalStart
 
-    this.positionBuffer.bind()
-    shader.attributes.positionHi.pointer(gl.FLOAT, false, 16, 0)
-    shader.attributes.positionLo.pointer(gl.FLOAT, false, 16, 8)
+        var startOffset = search.ge(this.xCoords, xStart, intervalStart, intervalEnd - 1)
+        var endOffset   = search.lt(this.xCoords, xEnd, startOffset, intervalEnd - 1) + 1
 
-    shader.uniforms.pixelRatio  = plot.pixelRatio
-    shader.uniforms.scaleHi     = SCALE_HI
-    shader.uniforms.scaleLo     = SCALE_LO
-    shader.uniforms.translateHi = TRANSLATE_HI
-    shader.uniforms.translateLo = TRANSLATE_LO
-    shader.uniforms.viewBox = plot.viewBox
-
-    var scales = this.scales
-
-    if (snap) {
-      for (var scaleNum = scales.length - 1; scaleNum >= 0; scaleNum--) {
-          var lod = scales[scaleNum]
-          if(lod.pixelSize && (lod.pixelSize < pixelSize * 1.25) && scaleNum > 1) {
-            continue
-          }
-
-          var intervalStart = lod.offset
-          var intervalEnd   = lod.count + intervalStart
-
-          var startOffset = search.ge(this.xCoords, xStart, intervalStart, intervalEnd - 1)
-          var endOffset   = search.lt(this.xCoords, xEnd, startOffset, intervalEnd - 1) + 1
-
-          if (endOffset > startOffset) {
-            gl.drawArrays(gl.POINTS, startOffset, (endOffset - startOffset))
-          }
-      }
-    }
-    else {
-      gl.drawArrays(gl.POINTS, 0, pointCount)
-    }
-
-    if (pick) return offset + pointCount
-    else {
-      if (!blend) gl.disable(gl.BLEND)
-      else {
-        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-      }
+        if (endOffset > startOffset) {
+          gl.drawArrays(gl.POINTS, startOffset, (endOffset - startOffset))
+        }
     }
   }
-})()
+  else {
+    gl.drawArrays(gl.POINTS, 0, pointCount)
+  }
+
+  if (pick) return offset + pointCount
+  else {
+    if (!blend) gl.disable(gl.BLEND)
+    else {
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+    }
+  }
+
+}
 
 proto.draw = proto.drawPick
 
@@ -226,36 +225,69 @@ proto.pick = function(x, y, value) {
 proto.update = function(options) {
   options = options || {}
 
-  var positions     = options.positions    || []
+  var positions     = options.positions || []
   var colors        = options.colors       || []
   var glyphs        = options.glyphs       || []
   var sizes         = options.sizes        || []
   var borderWidths  = options.borderWidths || []
   var borderColors  = options.borderColors || []
   var gl = this.plot.gl
-
-  this.points = positions
-
-  //create packed positions here
-  var pointCount         = this.points.length / 2
-  var packedId           = pool.mallocInt32(pointCount)
-  var packedW            = pool.mallocFloat32(2 * pointCount)
-  var packed             = pool.mallocFloat64(2 * pointCount)
-  packed.set(this.points)
-
-  this.pointCount = pointCount
-
+  var pointCount = this.pointCount
   var snap = pointCount > this.snapThreshold
 
-  if (snap) {
-    this.scales = snapPoints(packed, packedId, packedW)
+  //update positions
+  if (options.positions != null) {
+    this.points = positions
+
+    pointCount = this.points.length / 2
+
+    snap = pointCount > this.snapThreshold
+
+    //create packed positions here
+    var packedW            = pool.mallocFloat32(2 * pointCount)
+    var packed             = pool.mallocFloat64(2 * pointCount)
+    var v_ids       = pool.mallocUint32(pointCount)
+    var v_position  = pool.mallocFloat32(4 * pointCount)
+
+    packed.set(this.points)
+
+    if (snap) {
+      if (this.i2idx) pool.free(this.i2idx)
+      this.i2idx = pool.mallocInt32(pointCount)
+      this.scales = snapPoints(packed, this.i2idx, packedW)
+    }
+
+    this.pointCount = pointCount
+
+
+    for(var i = 0; i < pointCount; ++i) {
+      var id = snap ? this.i2idx[i] : i
+
+      v_ids[i] = id
+
+      //collect buffers data
+      var x = positions[2 * id]
+      var y = positions[2 * id + 1]
+
+      //write hi- and lo- position parts
+      v_position[4 * i]      = x
+      v_position[4 * i + 1]  = y
+      v_position[4 * i + 2]  = x - v_position[4 * i]
+      v_position[4 * i + 3]  = y - v_position[4 * i + 1]
+
+      this.xCoords[i] = x
+    }
+
+    this.idBuffer.update(v_ids)
+    this.positionBuffer.update(v_position)
+    pool.free(v_position)
+    pool.free(v_ids)
+    pool.free(packed)
+    pool.free(packedW)
   }
 
-  //v_position contains normalized positions to the available range of positions
-  var v_position  = pool.mallocFloat32(4 * pointCount)
   var v_sizeWidth = pool.mallocFloat32(2 * pointCount)
   var v_color     = pool.mallocUint8(2 * pointCount)
-  var v_ids       = pool.mallocUint32(pointCount)
   var v_chars     = pool.mallocUint8(2 * pointCount)
 
   //aggregate colors
@@ -330,26 +362,15 @@ proto.update = function(options) {
     this.chars = chars
   }
 
-  //collect buffers data
   for(var i = 0; i < pointCount; ++i) {
-    var id = snap ? packedId[i] : i
-    var x = positions[2 * id]
-    var y = positions[2 * id + 1]
+    var id = snap ? this.i2idx[i] : i
+
     var s = sizes[id]
     var w = borderWidths[id]
-
-    //write hi- and lo- position parts
-    v_position[4 * i]      = x
-    v_position[4 * i + 1]  = y
-    v_position[4 * i + 2]  = x - v_position[4 * i]
-    v_position[4 * i + 3]  = y - v_position[4 * i + 1]
-
-    this.xCoords[i] = x
 
     //size is doubled bc character SDF is twice less than character step
     v_sizeWidth[2 * i]     = s*2
     v_sizeWidth[2 * i + 1] = w
-    v_ids[i]               = id
 
     //color/bufferColor indexes
     var cId = colorIds[id]
@@ -366,13 +387,9 @@ proto.update = function(options) {
     v_chars[2 * i] = charId % cols
   }
 
-  // if (!v_color.length) return
-
   //fill buffes
-  this.positionBuffer.update(v_position)
   this.sizeBuffer.update(v_sizeWidth)
   this.colorBuffer.update(v_color)
-  this.idBuffer.update(v_ids)
   this.charBuffer.update(v_chars)
 
   //update char/color textures
@@ -382,14 +399,9 @@ proto.update = function(options) {
   }
   this.paletteTexture.setPixels(ndarray(paletteColors.slice(0, 256*4), [256, 1, 4]))
 
-  pool.free(v_position)
   pool.free(v_sizeWidth)
   pool.free(v_color)
-  pool.free(v_ids)
   pool.free(v_chars)
-  pool.free(packed)
-  pool.free(packedId)
-  pool.free(packedW)
 }
 
 proto.dispose = function() {
