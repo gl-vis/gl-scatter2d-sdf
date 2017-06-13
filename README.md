@@ -21,4 +21,4 @@ plot.draw()
 ```
 
 # License
-(c) 2015 Mikola Lysenko. MIT License
+(c) 2016 Dima Yv. MIT License

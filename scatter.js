@@ -48,6 +48,7 @@ function GLScatterFancy(
   this.charCanvas     = document.createElement('canvas')
   this.charTexture    = createTexture(this.plot.gl, this.charCanvas)
   this.charStep       = 400
+  this.charFit        = .255
 
   //snapping loses points sorting, so disable snapping on small number of points
   this.snapThreshold  = 1e4
@@ -323,7 +324,8 @@ proto.update = function(options) {
       shape: [atlasW, atlasH],
       step: [step, step],
       chars: chars,
-      align: true
+      align: true,
+      fit: this.charFit
     })
     this.chars = chars
   }
